@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* ── Design System Tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Colors — VoiceSwap dark theme */
+  --color-bg:           #0a0a0a;   /* near-black background */
+  --color-surface:      #111111;   /* cards, panels */
+  --color-border:       #222222;   /* subtle borders */
+  --color-primary:      #6366f1;   /* indigo — action buttons */
+  --color-primary-glow: #6366f133; /* indigo glow overlay */
+  --color-text:         #ffffff;
+  --color-text-muted:   #888888;
+  --color-success:      #22c55e;
+  --color-error:        #ef4444;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* ── Utility: Indigo glow ring (for selected voice cards, etc.) ─────────── */
+.glow-ring {
+  box-shadow: 0 0 0 2px var(--color-primary), 0 0 16px var(--color-primary-glow);
+}
+
+/* ── Animated background orbs ─────────────────────────────────────────────── */
+@keyframes orb1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(40px, -30px) scale(1.06); }
+  66%  { transform: translate(-20px, 20px) scale(0.96); }
+}
+@keyframes orb2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(-35px, 25px) scale(1.04); }
+  70%  { transform: translate(20px, -15px) scale(0.97); }
+}
+@keyframes orb3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(25px, -20px) scale(1.05); }
+}
+
+.anim-orb-1 { animation: orb1 20s ease-in-out infinite; }
+.anim-orb-2 { animation: orb2 25s ease-in-out infinite; }
+.anim-orb-3 { animation: orb3 17s ease-in-out infinite; }
+
+/* ── Background grid pattern ─────────────────────────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
