@@ -461,7 +461,7 @@ Return only valid JSON, no markdown.
 - ✅ Phase 3 — Voice Library + Selection UI
 - ✅ Phase 4 — Voice Synthesis (Google TTS) + Video Merge (ffmpeg)
 - ✅ Phase 5 — Result Screen + Before/After
-- ✅ UI Overhaul — Full redesign (landing page, /studio, 5-step wizard, glassmorphism, animations)
+- ⬜ UI Overhaul — Full redesign (glassmorphism, animations, premium feel)
 - ⬜ Phase 6 — ADK Integration + GCP Deployment + Submission Materials
 
 ### TTS API Key Fix (important for new dev machines)
