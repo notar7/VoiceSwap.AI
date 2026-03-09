@@ -1,0 +1,15 @@
+# Cloud Build config — gives the Docker build 20 minutes (vs default 10)
+# and passes the image directly to Cloud Run.
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/voiceswap-backend:$COMMIT_SHA'
+      - '.'
+    timeout: '1200s'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/voiceswap-backend:$COMMIT_SHA'
+
+timeout: '1200s'
