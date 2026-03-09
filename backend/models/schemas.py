@@ -88,3 +88,17 @@ class MergeResponse(BaseModel):
     job_id: str
     status: str
     download_url: str  # URL to the final output.mp4
+
+
+# ── ADK Agent ─────────────────────────────────────────────────────────────────
+
+class AgentRequest(BaseModel):
+    voice_id: str
+
+
+class AgentResponse(BaseModel):
+    job_id: str
+    voice_id: str
+    status: str
+    result: str          # Final text response from the ADK agent
+    download_url: Optional[str] = None

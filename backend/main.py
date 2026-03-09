@@ -5,18 +5,22 @@ from dotenv import load_dotenv
 import os
 import json
 import shutil
+import asyncio
+from functools import partial
 
 from models.schemas import (
     UploadResponse, AnalysisResponse, TranscriptResponse,
     VoiceDirectionResponse, WordTimestamp, EmotionSegment,
     VoiceListResponse, Voice, PreviewVoiceRequest,
     SynthesizeRequest, SynthesizeResponse, MergeResponse,
+    AgentRequest, AgentResponse,
 )
 from utils.file_handler import create_job_dir, new_job_id, get_job_dir, job_exists
 from utils.ssml_builder import build_ssml
 from services.ffmpeg import extract_audio, get_video_duration, check_ffmpeg, merge_audio_video
 from services.gemini import analyze_audio
 from services.tts import preview_voice, synthesize_voice
+from agent import run_pipeline_agent
 
 # Load environment variables from .env file
 load_dotenv()
@@ -360,4 +364,54 @@ async def original_endpoint(job_id: str):
         path=str(original_path),
         media_type="video/mp4",
         filename="original_input.mp4",
+    )
+
+
+# ── Phase 6: ADK Agent Endpoint ───────────────────────────────────────────────
+
+@app.post("/run-agent/{job_id}", response_model=AgentResponse)
+async def run_agent_endpoint(job_id: str, body: AgentRequest):
+    """
+    Run the VoiceSwap ADK agent for a job — orchestrates the full pipeline:
+      analyze (Gemini) → synthesize (Google TTS) → merge (ffmpeg)
+
+    The ADK agent uses Gemini 2.5 Flash to reason about tool calls and
+    execute them in order. This replaces calling /analyze, /synthesize,
+    and /merge as separate endpoints.
+
+    Required for the 'Live Agents' track: ADK mandatory tech.
+    """
+    if not job_exists(job_id):
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
+
+    job_dir = get_job_dir(job_id)
+    if not (job_dir / "audio.wav").exists():
+        raise HTTPException(
+            status_code=400,
+            detail="Audio not extracted yet. Call /upload first.",
+        )
+
+    # Run the blocking ADK agent in a thread pool so the async event loop is free
+    loop = asyncio.get_event_loop()
+    try:
+        result = await loop.run_in_executor(
+            None,
+            partial(run_pipeline_agent, job_id, body.voice_id),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {e}")
+
+    # Extract download URL if the merge completed (output.mp4 exists)
+    download_url = (
+        f"/download/{job_id}"
+        if (job_dir / "output.mp4").exists()
+        else None
+    )
+
+    return AgentResponse(
+        job_id=job_id,
+        voice_id=body.voice_id,
+        status="complete" if download_url else "partial",
+        result=result,
+        download_url=download_url,
     )

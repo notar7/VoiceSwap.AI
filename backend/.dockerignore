@@ -1,0 +1,30 @@
+# ── Files to exclude from the Docker build context ───────────────────────────
+
+# Secrets — never bake API keys into the image
+.env
+credentials/
+
+# Python virtual environment — deps are installed fresh by pip
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Temp job files — Cloud Run uses ephemeral storage anyway
+tmp/
+
+# Dev/editor files
+.git/
+.gitignore
+.vscode/
+
+# Test files
+test_video.mp4
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
