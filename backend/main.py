@@ -202,12 +202,12 @@ async def analyze_video(job_id: str):
 # Preset voice library — hardcoded as per PRD.
 # Named voices make the UI feel like a real product (not just IDs).
 VOICES = [
-    Voice(id="en-US-Neural2-D", name="Atlas",   gender="Male",   accent="American"),
-    Voice(id="en-US-Neural2-F", name="Nova",    gender="Female", accent="American"),
-    Voice(id="en-GB-Neural2-B", name="Sterling", gender="Male",   accent="British"),
-    Voice(id="en-GB-Neural2-C", name="Ivy",     gender="Female", accent="British"),
-    Voice(id="en-IN-Neural2-B", name="Arjun",   gender="Male",   accent="Indian"),
-    Voice(id="en-IN-Neural2-A", name="Priya",   gender="Female", accent="Indian"),
+    Voice(id="en-US-Chirp3-HD-Charon", name="Charon", gender="Male",   accent="American"),
+    Voice(id="en-US-Chirp3-HD-Fenrir", name="Fenrir", gender="Male",   accent="American"),
+    Voice(id="en-US-Chirp3-HD-Orus",   name="Orus",   gender="Male",   accent="American"),
+    Voice(id="en-US-Chirp3-HD-Aoede",  name="Aoede",  gender="Female", accent="American"),
+    Voice(id="en-US-Chirp3-HD-Kore",   name="Kore",   gender="Female", accent="American"),
+    Voice(id="en-US-Chirp3-HD-Leda",   name="Leda",   gender="Female", accent="American"),
 ]
 
 
