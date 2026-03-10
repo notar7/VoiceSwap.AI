@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { UserRound } from "lucide-react";
 import type { Voice } from "@/types";
 
 interface VoiceSelectorProps {
@@ -12,15 +13,43 @@ interface VoiceSelectorProps {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-const GENDER_ICON: Record<string, string> = {
-    Male: "♂",
-    Female: "♀",
-};
-
 const ACCENT_FLAG: Record<string, string> = {
     American: "🇺🇸",
     British: "🇬🇧",
     Indian: "🇮🇳",
+};
+
+// Blue for Male, purple for Female — applied consistently across avatar + card border
+const GENDER_THEME: Record<string, {
+    avatarGrad: string;
+    avatarIcon: string;
+    selectedBorder: string;
+    selectedBg: string;
+    selectedGlow: string;
+    selectedRadio: string;
+    colLabel: string;
+    colLabelText: string;
+}> = {
+    Male: {
+        avatarGrad:    "from-blue-900/60 to-indigo-900/60",
+        avatarIcon:    "text-blue-300",
+        selectedBorder:"border-blue-500",
+        selectedBg:    "bg-blue-500/10",
+        selectedGlow:  "shadow-[0_0_20px_rgba(59,130,246,0.18)]",
+        selectedRadio: "border-blue-500 bg-blue-500",
+        colLabel:      "text-blue-400",
+        colLabelText:  "Male",
+    },
+    Female: {
+        avatarGrad:    "from-purple-900/60 to-pink-900/60",
+        avatarIcon:    "text-purple-300",
+        selectedBorder:"border-purple-500",
+        selectedBg:    "bg-purple-500/10",
+        selectedGlow:  "shadow-[0_0_20px_rgba(168,85,247,0.18)]",
+        selectedRadio: "border-purple-500 bg-purple-500",
+        colLabel:      "text-purple-400",
+        colLabelText:  "Female",
+    },
 };
 
 const SAMPLE_TEXT = "Hello, I'm your new AI voice. How does this sound to you?";
@@ -110,106 +139,111 @@ export function VoiceSelector({ voices, selectedVoiceId, onSelect }: VoiceSelect
         [playingId, stopCurrent]
     );
 
-    return (
-        <div className="w-full space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {voices.map((voice, i) => {
+    const males   = voices.filter((v) => v.gender === "Male");
+    const females = voices.filter((v) => v.gender === "Female");
+
+    const renderColumn = (group: Voice[], gender: "Male" | "Female") => {
+        const theme = GENDER_THEME[gender];
+        return (
+            <div className="flex flex-col gap-2.5">
+                {/* Column header */}
+                <div className="flex items-center gap-2 px-1 mb-0.5">
+                    <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${theme.avatarGrad} border border-white/10 flex items-center justify-center`}>
+                        <UserRound className={`w-3 h-3 ${theme.avatarIcon}`} />
+                    </div>
+                    <span className={`text-[11px] font-bold uppercase tracking-widest ${theme.colLabel}`}>
+                        {theme.colLabelText}
+                    </span>
+                </div>
+
+                {group.map((voice, i) => {
                     const isSelected = selectedVoiceId === voice.id;
-                    const isPlaying = playingId === voice.id;
-                    const isLoading = loadingId === voice.id;
+                    const isPlaying  = playingId === voice.id;
+                    const isLoading  = loadingId === voice.id;
 
                     return (
                         <motion.div
                             key={voice.id}
-                            initial={{ opacity: 0, y: 12 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.25, delay: i * 0.05 }}
+                            transition={{ duration: 0.22, delay: i * 0.06 }}
                             onClick={() => onSelect(voice.id)}
                             id={`voice-card-${voice.id}`}
                             className={`
-                relative flex items-center gap-4 p-4 rounded-xl border cursor-pointer
-                transition-all duration-200 select-none
-                ${isSelected
-                                    ? "border-indigo-500 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.15)]"
-                                    : "border-[#222] bg-[#111] hover:border-[#333] hover:bg-[#141414]"
+                                relative flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer
+                                transition-all duration-200 select-none
+                                ${isSelected
+                                    ? `${theme.selectedBorder} ${theme.selectedBg} ${theme.selectedGlow}`
+                                    : "border-[#222] bg-[#111] hover:border-[#2a2a2a] hover:bg-[#141414]"
                                 }
-              `}
+                            `}
                         >
-                            {/* Selection indicator */}
-                            <div
-                                className={`
-                  absolute top-3 right-3 w-4 h-4 rounded-full border-2 flex items-center justify-center
-                  transition-all duration-200
-                  ${isSelected ? "border-indigo-500 bg-indigo-500" : "border-[#333]"}
-                `}
-                            >
+                            {/* Selection radio */}
+                            <div className={`
+                                absolute top-3 right-3 w-4 h-4 rounded-full border-2 flex items-center justify-center
+                                transition-all duration-200
+                                ${isSelected ? theme.selectedRadio : "border-[#333]"}
+                            `}>
                                 {isSelected && (
                                     <motion.span
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
                                         className="text-white text-[8px] font-bold leading-none"
-                                    >
-                                        ✓
-                                    </motion.span>
+                                    >✓</motion.span>
                                 )}
                             </div>
 
-                            {/* Avatar / gender icon */}
-                            <div
-                                className={`
-                  flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl text-xl
-                  ${isSelected ? "bg-indigo-500/20" : "bg-[#1a1a1a]"}
-                `}
-                            >
-                                {voice.gender === "Female" ? "👩" : "👨"}
+                            {/* Avatar */}
+                            <div className={`
+                                flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl
+                                bg-gradient-to-br ${theme.avatarGrad} border border-white/[0.07]
+                            `}>
+                                <UserRound className={`w-5 h-5 ${theme.avatarIcon}`} />
                             </div>
 
                             {/* Info */}
                             <div className="flex-1 min-w-0 pr-6">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="text-white font-semibold text-sm">{voice.name}</span>
-                                    <span className="text-[#555] text-xs">{GENDER_ICON[voice.gender]}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-base leading-none">{ACCENT_FLAG[voice.accent]}</span>
-                                    <span className="text-[#666] text-xs">{voice.accent}</span>
+                                <p className="text-white font-semibold text-sm leading-tight">{voice.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-sm leading-none">{ACCENT_FLAG[voice.accent] ?? "🌐"}</span>
+                                    <span className="text-[#555] text-[11px]">{voice.accent}</span>
                                 </div>
                             </div>
 
                             {/* Play button */}
                             <button
                                 id={`play-voice-${voice.id}`}
-                                onClick={(e) => {
-                                    e.stopPropagation(); // don't also trigger card selection
-                                    playPreview(voice);
-                                }}
+                                onClick={(e) => { e.stopPropagation(); playPreview(voice); }}
                                 className={`
-                  flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg
-                  transition-all duration-200 border
-                  ${isPlaying
-                                        ? "border-indigo-500 bg-indigo-500/20 text-indigo-400"
+                                    flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg
+                                    transition-all duration-200 border text-xs
+                                    ${isPlaying
+                                        ? `${theme.selectedBorder} ${theme.selectedBg} ${theme.avatarIcon}`
                                         : "border-[#333] bg-[#1a1a1a] text-[#666] hover:border-[#444] hover:text-white"
                                     }
-                `}
+                                `}
                             >
                                 {isLoading ? (
                                     <motion.div
-                                        className="w-3.5 h-3.5 rounded-full border-2 border-indigo-400 border-t-transparent"
+                                        className={`w-3 h-3 rounded-full border-2 ${theme.avatarIcon} border-t-transparent`}
                                         animate={{ rotate: 360 }}
                                         transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                                     />
-                                ) : isPlaying ? (
-                                    <span className="text-xs">■</span>
-                                ) : (
-                                    <span className="text-xs">▶</span>
-                                )}
+                                ) : isPlaying ? "■" : "▶"}
                             </button>
                         </motion.div>
                     );
                 })}
             </div>
+        );
+    };
 
-            {/* Fallback note */}
+    return (
+        <div className="w-full space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+                {renderColumn(males,   "Male")}
+                {renderColumn(females, "Female")}
+            </div>
             <p className="text-[#444] text-xs text-center">
                 ▶ Preview uses Google TTS when available, browser speech as fallback
             </p>
