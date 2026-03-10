@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { Upload, Sparkles, Mic2, Mic, Volume2, CheckCircle2, FileText, XCircle, RotateCcw, Download as DownloadIcon, UserRound } from "lucide-react";
 import { VideoUploader } from "@/components/VideoUploader";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
 import type { UploadResponse, AnalysisResponse, ProcessingStep, Voice } from "@/types";
@@ -68,6 +69,13 @@ const fadeUp: Variants = {
   exit: { opacity: 0, y: -16, transition: { duration: 0.25 } },
 };
 
+// ── Step icon lookup ──────────────────────────────────────────────────────────
+function StepIcon({ stepId, className = "w-5 h-5" }: { stepId: number; className?: string }) {
+  const map = { 1: Upload, 2: Sparkles, 3: Mic2, 4: Volume2, 5: CheckCircle2 };
+  const Icon = map[stepId as keyof typeof map];
+  return Icon ? <Icon className={className} /> : null;
+}
+
 // ── Circular Step Progress Bar ────────────────────────────────────────────────
 // Circles and connector lines are interleaved directly in the flex row so the
 // lines start/end exactly at circle edges — no calc() math needed.
@@ -133,7 +141,7 @@ function StepProgressBar({
                     transition={{ duration: 0.85, repeat: Infinity, ease: "linear" }}
                   />
                 ) : (
-                  <span>{step.icon}</span>
+                  <StepIcon stepId={step.id} />
                 )}
               </motion.div>
 
@@ -182,9 +190,9 @@ function StepProgressBar({
 }
 
 // ── Voice Avatar Card ─────────────────────────────────────────────────────────
-const AVATAR_BG: Record<string, { grad: string; ring: string; text: string }> = {
-  Male:   { grad: "from-blue-900/50 to-indigo-900/50",  ring: "border-blue-500/40",   text: "text-blue-300" },
-  Female: { grad: "from-purple-900/50 to-pink-900/50",  ring: "border-purple-500/40", text: "text-purple-300" },
+const AVATAR_BG: Record<string, { grad: string; ring: string; text: string; iconColor: string; selBorder: string; selGlow: string; selRadio: string; colLabel: string }> = {
+  Male:   { grad: "from-blue-900/50 to-indigo-900/50",   ring: "border-blue-500/40",   text: "text-blue-300",   iconColor: "text-blue-300",   selBorder: "border-blue-500",   selGlow: "shadow-[0_0_24px_rgba(59,130,246,0.22)]",   selRadio: "border-blue-400 bg-blue-500",   colLabel: "text-blue-400" },
+  Female: { grad: "from-purple-900/50 to-pink-900/50",   ring: "border-purple-500/40", text: "text-purple-300", iconColor: "text-purple-300", selBorder: "border-purple-500", selGlow: "shadow-[0_0_24px_rgba(168,85,247,0.22)]", selRadio: "border-purple-400 bg-purple-500", colLabel: "text-purple-400" },
 };
 
 interface VoiceAvatarGridProps {
@@ -262,69 +270,71 @@ function VoiceAvatarGrid({
     [playingId, stopAll]
   );
 
-  const displayVoices = voices.slice(0, 6);
+  const males   = voices.filter((v) => v.gender === "Male").slice(0, 3);
+  const females  = voices.filter((v) => v.gender === "Female").slice(0, 3);
 
-  return (
-    <div className="flex flex-col gap-5 h-full">
-      <div className="grid grid-cols-2 gap-3 flex-1">
-        {displayVoices.map((voice, i) => {
+  const renderColumn = (group: Voice[], gender: "Male" | "Female") => {
+    const theme = AVATAR_BG[gender] ?? AVATAR_BG.Male;
+    return (
+      <div className="flex flex-col gap-2">
+        {/* Column header */}
+        <div className="flex items-center gap-1.5 px-1 mb-0.5">
+          <div className={`w-4 h-4 rounded-full bg-gradient-to-br ${theme.grad} border border-white/10 flex items-center justify-center`}>
+            <UserRound className={`w-2.5 h-2.5 ${theme.iconColor}`} />
+          </div>
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${theme.colLabel}`}>
+            {gender}
+          </span>
+        </div>
+
+        {group.map((voice, i) => {
           const isSelected = selectedVoiceId === voice.id;
           const isPlaying  = playingId === voice.id;
           const isLoading  = loadingId === voice.id;
-          const colors = AVATAR_BG[voice.gender] ?? AVATAR_BG.Male;
+          const colors = theme;
 
           return (
             <motion.div
               key={voice.id}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: i * 0.05 }}
+              transition={{ duration: 0.28, delay: i * 0.06 }}
               onClick={() => onSelect(voice.id)}
               className={[
                 "relative flex flex-col items-center gap-2.5 p-4 rounded-2xl border cursor-pointer transition-all duration-200 select-none overflow-hidden",
                 isSelected
-                  ? "border-indigo-500 shadow-[0_0_24px_rgba(99,102,241,0.2)]"
+                  ? `${colors.selBorder} ${colors.selGlow}`
                   : "border-[#222] hover:border-[#333]",
               ].join(" ")}
             >
               {/* gradient bg */}
-              <div
-                className={[
-                  "absolute inset-0 bg-gradient-to-br transition-opacity duration-300",
-                  colors.grad,
-                  isSelected ? "opacity-100" : "opacity-0",
-                ].join(" ")}
-              />
+              <div className={[
+                "absolute inset-0 bg-gradient-to-br transition-opacity duration-300",
+                colors.grad,
+                isSelected ? "opacity-100" : "opacity-0",
+              ].join(" ")} />
 
               {/* checkmark */}
-              <div
-                className={[
-                  "absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-200",
-                  isSelected ? "border-indigo-400 bg-indigo-500" : "border-[#333]",
-                ].join(" ")}
-              >
+              <div className={[
+                "absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center z-10 transition-all duration-200",
+                isSelected ? colors.selRadio : "border-[#333]",
+              ].join(" ")}>
                 {isSelected && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="text-white text-[8px] font-black leading-none"
-                  >
-                    ✓
-                  </motion.span>
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    className="text-white text-[8px] font-black leading-none">✓</motion.span>
                 )}
               </div>
 
               {/* avatar */}
-              <div
-                className={[
-                  "relative z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center text-2xl bg-[#0a0a0a]",
-                  isSelected ? colors.ring : "border-[#2a2a2a]",
-                ].join(" ")}
-              >
-                {voice.gender === "Female" ? "👩" : "👨"}
+              <div className={[
+                "relative z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center",
+                `bg-gradient-to-br ${colors.grad}`,
+                isSelected ? colors.ring : "border-[#2a2a2a]",
+              ].join(" ")}>
+                <UserRound className={`w-6 h-6 ${colors.iconColor}`} />
                 {isSelected && (
                   <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-indigo-400"
+                    className={`absolute inset-0 rounded-full border-2 ${colors.selBorder}`}
                     animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
@@ -346,25 +356,30 @@ function VoiceAvatarGrid({
                 className={[
                   "z-10 flex items-center justify-center gap-1 px-3 py-1 rounded-lg text-[10px] font-semibold border transition-all duration-200",
                   isPlaying
-                    ? "border-indigo-500 bg-indigo-500/20 text-indigo-300"
+                    ? `${colors.selBorder} ${colors.selBorder.replace("border", "bg")}/20 ${colors.text}`
                     : "border-[#2a2a2a] bg-[#111] text-[#555] hover:text-white hover:border-[#444]",
                 ].join(" ")}
               >
                 {isLoading ? (
                   <motion.div
-                    className="w-2.5 h-2.5 rounded-full border-2 border-indigo-400 border-t-transparent"
+                    className={`w-2.5 h-2.5 rounded-full border-2 ${colors.iconColor} border-t-transparent`}
                     animate={{ rotate: 360 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                   />
-                ) : isPlaying ? (
-                  <>■ Stop</>
-                ) : (
-                  <>▶ Preview</>
-                )}
+                ) : isPlaying ? <>■ Stop</> : <>▶ Preview</>}
               </button>
             </motion.div>
           );
         })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-5 h-full">
+      <div className="grid grid-cols-2 gap-4 flex-1">
+        {renderColumn(males,  "Male")}
+        {renderColumn(females, "Female")}
       </div>
 
       {/* Apply button */}
@@ -638,7 +653,7 @@ export default function StudioPage() {
               <StepCard className="p-12 flex flex-col items-center gap-8">
                 <div className="text-center">
                   <motion.div
-                    className="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-indigo-500/40 flex items-center justify-center text-4xl bg-indigo-500/5"
+                    className="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-indigo-500/40 flex items-center justify-center bg-indigo-500/5"
                     animate={{
                       boxShadow: [
                         "0 0 0px rgba(99,102,241,0)",
@@ -648,7 +663,7 @@ export default function StudioPage() {
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    ✨
+                    <Sparkles className="w-9 h-9 text-indigo-400" />
                   </motion.div>
                   <h2 className="text-white font-bold text-2xl mb-1">Gemini is analyzing your video</h2>
                   <p className="text-[#444] text-sm mt-1">{uploadData?.filename}</p>
@@ -668,7 +683,7 @@ export default function StudioPage() {
               <StepCard>
                 {/* Header */}
                 <div className="flex items-center gap-3 px-7 pt-6 pb-4 border-b border-[#1a1a1a]">
-                  <span className="text-lg">✨</span>
+                  <Sparkles className="w-5 h-5 text-indigo-400" />
                   <span className="text-white font-bold text-lg">Gemini Analysis Complete</span>
                   <div className="flex-1 h-px bg-[#1a1a1a]" />
                   <span className="text-green-400/60 text-xs font-semibold border border-green-500/20 bg-green-500/5 rounded-full px-3 py-1">
@@ -682,7 +697,7 @@ export default function StudioPage() {
                   {/* COL 1 — Voice Direction JSON */}
                   <div className="flex flex-col p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-base">🎤</span>
+                      <Mic2 className="w-4 h-4 text-indigo-400" />
                       <span className="text-indigo-400 font-semibold text-xs uppercase tracking-wider">Voice Direction</span>
                     </div>
                     <div className="rounded-xl bg-[#0a0a0a] border border-[#1a1a1a] overflow-hidden">
@@ -700,7 +715,7 @@ export default function StudioPage() {
                   {/* COL 2 — Transcript JSON */}
                   <div className="flex flex-col p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-base">📝</span>
+                      <FileText className="w-4 h-4 text-indigo-400" />
                       <span className="text-indigo-400 font-semibold text-xs uppercase tracking-wider">Transcript</span>
                     </div>
                     <div className="rounded-xl bg-[#0a0a0a] border border-[#1a1a1a] overflow-hidden">
@@ -718,7 +733,7 @@ export default function StudioPage() {
                   {/* COL 3 — Voice selection */}
                   <div className="flex flex-col p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-base">🎙️</span>
+                      <Mic className="w-4 h-4 text-white" />
                       <span className="text-white font-semibold text-xs uppercase tracking-wider">Choose Voice</span>
                       {selectedVoiceId && (
                         <span className="ml-auto text-indigo-400 text-[9px] border border-indigo-500/30 bg-indigo-500/10 rounded-full px-2 py-0.5">
@@ -763,7 +778,7 @@ export default function StudioPage() {
               <StepCard className="p-12 flex flex-col items-center gap-8">
                 <div className="text-center">
                   <motion.div
-                    className="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-indigo-500/40 flex items-center justify-center text-4xl bg-indigo-500/5"
+                    className="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-indigo-500/40 flex items-center justify-center bg-indigo-500/5"
                     animate={{
                       boxShadow: [
                         "0 0 0px rgba(99,102,241,0)",
@@ -773,7 +788,7 @@ export default function StudioPage() {
                     }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
-                    🔊
+                    <Volume2 className="w-9 h-9 text-indigo-400" />
                   </motion.div>
                   <h2 className="text-white font-bold text-2xl mb-1">Creating your new voice</h2>
                   <p className="text-[#444] text-sm mt-1">Google TTS · Gemini-directed voice synthesis</p>
@@ -806,9 +821,9 @@ export default function StudioPage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 20 }}
-                  className="flex-shrink-0 w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-3xl"
+                  className="flex-shrink-0 w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center"
                 >
-                  🎉
+                  <CheckCircle2 className="w-8 h-8 text-green-400" />
                 </motion.div>
                 <div>
                   <p className="text-white font-bold text-xl">Voice Swap Complete!</p>
@@ -838,13 +853,13 @@ export default function StudioPage() {
                   download="voiceswap_output.mp4"
                   className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold text-base transition-all duration-200 shadow-[0_0_24px_rgba(34,197,94,0.3)] hover:shadow-[0_0_36px_rgba(34,197,94,0.45)]"
                 >
-                  ⬇ Download Video
+                  <DownloadIcon className="w-4 h-4" /> Download Video
                 </a>
                 <button
                   onClick={reset}
                   className="flex items-center justify-center gap-2 py-4 rounded-2xl border border-[#2a2a2a] bg-[#0f0f0f] hover:bg-[#141414] hover:border-[#383838] text-white font-bold text-base transition-all duration-200"
                 >
-                  ↺ Process Another Video
+                  <RotateCcw className="w-4 h-4" /> Process Another Video
                 </button>
               </div>
             </motion.div>
@@ -854,8 +869,8 @@ export default function StudioPage() {
           {phase === "error" && (
             <motion.div key="error" variants={fadeUp} initial="hidden" animate="show" exit="exit">
               <StepCard className="p-12 flex flex-col items-center gap-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-4xl">
-                  ❌
+                <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                  <XCircle className="w-9 h-9 text-red-400" />
                 </div>
                 <div>
                   <p className="text-white font-bold text-2xl mb-2">Something went wrong</p>
