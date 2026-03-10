@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView, type Variants } from "framer-motion";
 import Link from "next/link";
+import { Upload, Sparkles, Mic2, Volume2, Download, Brain, Zap, FileText, Film } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /*  Animation primitives                                                        */
@@ -55,31 +56,31 @@ function InView({
 const STEPS = [
   {
     n: "01",
-    emoji: "⬆️",
+    icon: <Upload className="w-6 h-6 text-indigo-400" />,
     title: "Upload Video",
     desc: "Drop any MP4 or MOV. Up to 2 minutes.",
   },
   {
     n: "02",
-    emoji: "🧠",
+    icon: <Sparkles className="w-6 h-6 text-indigo-400" />,
     title: "Gemini Analyzes",
     desc: "Transcription, emotion, tone and pacing in a single API call.",
   },
   {
     n: "03",
-    emoji: "🎭",
+    icon: <Mic2 className="w-6 h-6 text-indigo-400" />,
     title: "Pick a Voice",
-    desc: "6 expressive voices across accents and genders.",
+    desc: "6 Chirp3 HD voices — the highest quality Google TTS offers.",
   },
   {
     n: "04",
-    emoji: "🔊",
+    icon: <Volume2 className="w-6 h-6 text-indigo-400" />,
     title: "TTS Synthesizes",
     desc: "Gemini-authored SSML drives a truly expressive performance.",
   },
   {
     n: "05",
-    emoji: "🎦",
+    icon: <Download className="w-6 h-6 text-indigo-400" />,
     title: "Download",
     desc: "New voice merged into your video. Ready to share.",
   },
@@ -87,7 +88,7 @@ const STEPS = [
 
 const FEATURES = [
   {
-    icon: "🧠",
+    icon: <Brain className="w-7 h-7 text-indigo-400" />,
     title: "Gemini as Voice Director",
     desc: "Not just a transcriber. Gemini detects emotion segments, emphasis words, and writes expressive SSML performance notes — the creative intelligence of the pipeline.",
     border: "border-indigo-500/20",
@@ -95,7 +96,7 @@ const FEATURES = [
     grad: "from-indigo-500/[0.07] to-violet-500/[0.04]",
   },
   {
-    icon: "🎤",
+    icon: <Mic2 className="w-7 h-7 text-violet-400" />,
     title: "Expressive Synthesis",
     desc: "Google Cloud TTS receives Gemini-authored SSML so it speaks with the same energy, pace, and emotional emphasis as the original speaker. Different voice, same soul.",
     border: "border-violet-500/20",
@@ -103,7 +104,7 @@ const FEATURES = [
     grad: "from-violet-500/[0.07] to-purple-500/[0.04]",
   },
   {
-    icon: "⚡",
+    icon: <Zap className="w-7 h-7 text-blue-400" />,
     title: "Full Pipeline, One Click",
     desc: "Upload → Gemini analyze → SSML → TTS synthesize → ffmpeg merge. The entire pipeline runs automatically and delivers a download-ready video in under a minute.",
     border: "border-blue-500/20",
@@ -349,8 +350,8 @@ export default function LandingPage() {
                   className="flex flex-col items-center text-center gap-3.5"
                 >
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-2xl bg-[#111] border border-white/[0.07] flex items-center justify-center text-[26px] shadow-lg shadow-black/40">
-                      {step.emoji}
+                    <div className="w-16 h-16 rounded-2xl bg-[#111] border border-white/[0.07] flex items-center justify-center shadow-lg shadow-black/40">
+                      {step.icon}
                     </div>
                     <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-indigo-600 border-2 border-[#0a0a0a] flex items-center justify-center text-[10px] font-black text-white shadow-md shadow-indigo-500/30">
                       {i + 1}
@@ -400,7 +401,7 @@ export default function LandingPage() {
                 <div
                   className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none card-inner-glow"
                 />
-                <div className="text-[28px] mb-4">{f.icon}</div>
+                <div className="mb-4">{f.icon}</div>
                 <h3 className="text-white font-bold text-base mb-2">
                   {f.title}
                 </h3>
@@ -436,17 +437,17 @@ export default function LandingPage() {
               <motion.div variants={stagger} className="flex flex-col gap-4">
                 {[
                   {
-                    emoji: "📝",
+                    icon: <FileText className="w-5 h-5 text-indigo-400" />,
                     title: "Transcribes",
                     desc: "Full text with word-level timestamps.",
                   },
                   {
-                    emoji: "🎭",
+                    icon: <Sparkles className="w-5 h-5 text-indigo-400" />,
                     title: "Analyzes emotion",
                     desc: "Tone, energy, pace, and emphasis per segment.",
                   },
                   {
-                    emoji: "🎦",
+                    icon: <Film className="w-5 h-5 text-indigo-400" />,
                     title: "Writes SSML",
                     desc: "Tells Google TTS exactly how to perform the text.",
                   },
@@ -456,8 +457,8 @@ export default function LandingPage() {
                     variants={fadeUp}
                     className="flex items-start gap-4"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-lg shrink-0">
-                      {item.emoji}
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                      {item.icon}
                     </div>
                     <div>
                       <p className="text-white font-semibold text-[14px]">
