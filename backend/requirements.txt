@@ -9,3 +9,4 @@ google-adk==1.26.0
 deprecated>=1.2.14
 wrapt>=1.14.0
 requests>=2.28.0
+slowapi>=0.1.9

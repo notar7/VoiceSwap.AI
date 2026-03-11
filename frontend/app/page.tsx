@@ -156,11 +156,10 @@ export default function LandingPage() {
       {/* ─────────────────────────────────────────── Fixed Navbar */}
       <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/[0.05] bg-[#0a0a0a]/70 backdrop-blur-2xl">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[11px] font-black shadow-lg shadow-indigo-500/30 select-none">
-            V
-          </div>
+          <img src="/logo.png" alt="VoiceSwap.AI" className="w-10 h-10 object-contain" />
           <span className="font-bold text-[17px] tracking-tight">
-            VoiceSwap<span className="text-indigo-400">.AI</span>
+            Voice<span className="text-indigo-400">Swap</span>
+            <span className="text-[#3a3a3a]">.AI</span>
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -555,9 +554,7 @@ export default function LandingPage() {
       <footer className="border-t border-white/[0.05] py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-[9px] font-black select-none">
-              V
-            </div>
+            <img src="/logo.png" alt="VoiceSwap.AI" className="w-7 h-7 object-contain" />
             <span className="text-white/50 text-sm font-medium">
               VoiceSwap.AI
             </span>
