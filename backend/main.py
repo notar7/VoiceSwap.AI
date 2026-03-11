@@ -1,7 +1,10 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, FileResponse
 from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import json
 import shutil
@@ -25,11 +28,18 @@ from agent import run_pipeline_agent
 # Load environment variables from .env file
 load_dotenv()
 
+# ── Rate Limiter ─────────────────────────────────────────────────────────────
+# Uses client IP address as the key. Limits protect Gemini + TTS API budgets.
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="VoiceSwap.AI API",
     description="VoiceSwap.AI — Swap the voice. Keep the soul. AI-powered voice replacement pipeline using Gemini 2.5 Flash + Google TTS.",
     version="0.2.0",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Allow requests from the Next.js frontend during local dev and production
 app.add_middleware(
@@ -71,7 +81,8 @@ async def health():
 # ── Phase 1: Upload ───────────────────────────────────────────────────────────
 
 @app.post("/upload", response_model=UploadResponse)
-async def upload_video(file: UploadFile = File(...)):
+@limiter.limit("20/minute")
+async def upload_video(request: Request, file: UploadFile = File(...)):
     """
     Accept a video upload, save it, extract the audio track.
 
@@ -126,7 +137,8 @@ async def upload_video(file: UploadFile = File(...)):
 # ── Phase 2: Analyze with Gemini ──────────────────────────────────────────────
 
 @app.post("/analyze/{job_id}", response_model=AnalysisResponse)
-async def analyze_video(job_id: str):
+@limiter.limit("10/minute")
+async def analyze_video(request: Request, job_id: str):
     """
     Send the extracted audio to Gemini 2.0 Flash for:
       1. Transcription — full text with word-level timestamps
@@ -219,7 +231,8 @@ async def get_voices():
 
 
 @app.post("/preview-voice")
-async def preview_voice_endpoint(body: PreviewVoiceRequest):
+@limiter.limit("30/minute")
+async def preview_voice_endpoint(request: Request, body: PreviewVoiceRequest):
     """
     Generate a short MP3 audio preview for the selected voice.
     Returns raw MP3 bytes so the frontend can play it directly.
@@ -249,7 +262,8 @@ async def preview_voice_endpoint(body: PreviewVoiceRequest):
 # ── Phase 4: Synthesis + Merge ──────────────────────────────────────────────
 
 @app.post("/synthesize/{job_id}", response_model=SynthesizeResponse)
-async def synthesize_endpoint(job_id: str, body: SynthesizeRequest):
+@limiter.limit("10/minute")
+async def synthesize_endpoint(request: Request, job_id: str, body: SynthesizeRequest):
     """
     Build SSML from Gemini's voice direction JSON, then call Google TTS
     to synthesize the new voice. Saves new_audio.mp3 in the job directory.
@@ -294,7 +308,8 @@ async def synthesize_endpoint(job_id: str, body: SynthesizeRequest):
 
 
 @app.post("/merge/{job_id}", response_model=MergeResponse)
-async def merge_endpoint(job_id: str):
+@limiter.limit("10/minute")
+async def merge_endpoint(request: Request, job_id: str):
     """
     Replace the original video's audio track with the synthesized MP3.
     Uses ffmpeg -c:v copy so the video stream is not re-encoded — fast.
@@ -372,7 +387,8 @@ async def original_endpoint(job_id: str):
 # ── Phase 6: ADK Agent Endpoint ───────────────────────────────────────────────
 
 @app.post("/run-agent/{job_id}", response_model=AgentResponse)
-async def run_agent_endpoint(job_id: str, body: AgentRequest):
+@limiter.limit("5/minute")
+async def run_agent_endpoint(request: Request, job_id: str, body: AgentRequest):
     """
     Run the VoiceSwap ADK agent for a job — orchestrates the full pipeline:
       analyze (Gemini) → synthesize (Google TTS) → merge (ffmpeg)
