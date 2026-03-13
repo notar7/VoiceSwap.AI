@@ -13,45 +13,13 @@
 
 VoiceSwap.AI takes any video, extracts the audio, uses **Gemini 2.5 Flash** to analyse the emotional content and generate a perfectly-timed SSML script, then re-synthesises the voice via **Google Cloud TTS Chirp3-HD** — the highest-quality neural voices Google offers. The full pipeline is orchestrated by a **Google ADK agent**.
 
-The result: the same words, the same emotion, a completely different voice — synced frame-perfectly to the original video using ffmpeg's `atempo` time-stretch filter.
+The result: the same words, same emotion, a completely different voice — synced frame-perfectly to the original video using ffmpeg's `atempo` time-stretch filter.
 
 ---
 
 ## Architecture
 
-```
-User (Browser)
-      │
-      ▼
-┌─────────────────────────────────────────────────────┐
-│  Next.js 15 Frontend  (Vercel)                      │
-│  voiceswap-ai.vercel.app                            │
-└──────────────────────┬──────────────────────────────┘
-                       │  REST / JSON
-                       ▼
-┌─────────────────────────────────────────────────────┐
-│  FastAPI Backend  (Google Cloud Run)                │
-│  voiceswap-backend-139933973931.us-central1.run.app │
-│                                                     │
-│  ┌──────────────────────────────────────────────┐   │
-│  │  Google ADK Agent  (gemini-2.5-flash)        │   │
-│  │                                              │   │
-│  │  Tool 1: analyze_audio_tool                  │   │
-│  │    └─► Gemini 2.5 Flash — emotion analysis  │   │
-│  │         transcription + SSML direction       │   │
-│  │                                              │   │
-│  │  Tool 2: synthesize_voice_tool               │   │
-│  │    └─► Google Cloud TTS Chirp3-HD (v1beta1) │   │
-│  │                                              │   │
-│  │  Tool 3: merge_video_tool                    │   │
-│  │    └─► ffmpeg — atempo sync + video merge   │   │
-│  └──────────────────────────────────────────────┘   │
-│                                                     │
-│  Rate Limiting (slowapi) — per IP:                  │
-│    /upload: 20/min  /analyze: 10/min                │
-│    /synthesize: 10/min  /run-agent: 5/min           │
-└─────────────────────────────────────────────────────┘
-```
+![VoiceSwap.AI Architecture](Architecture/Architecture_VoiceSwap.AI.png)
 
 ### Key Technologies
 
@@ -137,10 +105,18 @@ Accessible via `POST /run-agent/{job_id}` on the API.
 
 ### 1. Clone the repo
 
+```bash
+git clone https://github.com/notar7/VoiceSwap.AI.git
+cd VoiceSwap.AI
+```
 
-## Architecture
+### 2. Backend Setup
 
-![VoiceSwap.AI Architecture](architecture/VoiceSwap.AI.png)
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv .venv
 
 # Activate (Windows)
 .venv\Scripts\activate
