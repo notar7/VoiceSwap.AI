@@ -137,18 +137,10 @@ Accessible via `POST /run-agent/{job_id}` on the API.
 
 ### 1. Clone the repo
 
-```bash
-git clone https://github.com/notar7/VoiceSwap.AI.git
-cd VoiceSwap.AI
-```
 
-### 2. Backend Setup
+## Architecture
 
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv .venv
+![VoiceSwap.AI Architecture](architecture/VoiceSwap.AI.png)
 
 # Activate (Windows)
 .venv\Scripts\activate
